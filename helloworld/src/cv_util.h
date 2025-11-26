@@ -18,7 +18,7 @@ inline cv::Mat load(const std::string& path, int flags = cv::IMREAD_COLOR)
     cv::Mat img = cv::imread(path, flags);
     if (img.empty())
     {
-        throw std::runtime_error("cvutil::load: failed to load image: " + path);
+        throw std::runtime_error("cv_util::load: failed to load image: " + path);
     }
     return img;
 }

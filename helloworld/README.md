@@ -31,18 +31,32 @@ Notes:
 
 ## Run
 
-- `./.build/HelloWorld assets/lena_img.png`
+List examples:
+
+- `./.build/HelloWorld --list`
+
+Run all examples:
+
+- `./.build/HelloWorld`
+- `./.build/HelloWorld --example all`
+
+Run one example and pass arguments (everything after `--args` is forwarded to the example):
+
+- `./.build/HelloWorld --example show --args assets/lena_img.png`
+- `./.build/HelloWorld --example edges --args assets/lena_img.png --t1 50 --t2 150 --blur 3`
 
 Behavior:
 
-- If a GUI is available (`DISPLAY`/`WAYLAND_DISPLAY`), shows a resizable window (drag to resize).
-- Otherwise, saves `output.png` in this folder.
+- Examples that open windows use a resizable window if a GUI is available (`DISPLAY`/`WAYLAND_DISPLAY`).
+- In headless environments, examples typically write `output.png`.
 
 ## Code Layout
 
-- `helloworld.cpp` — main entry
+- `main.cpp` — bootstrap runner with `--list`, `--example`, `--args`
+- `src/examples/registry.h` / `src/examples/registry.cpp` — example registry
+- `src/examples/show.cpp` — sample example: display an image
 - `src/logger.h` / `src/logger.cpp` — colored logger with timestamps, levels
-- `src/cv_util.h` — header-only helpers: `cvutil::load`, `cvutil::quickDisplay`
+- `src/cv_util.h` — header-only helpers: `cv_util::load`, `cv_util::quickDisplay`
 - `assets/` — sample images
 
 ## Logger

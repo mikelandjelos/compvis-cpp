@@ -9,11 +9,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(fmt CONFIG REQUIRED)
 find_package(OpenCV REQUIRED)
 
-add_executable(
-    HelloWorld main.cpp
+add_executable(HelloWorld
+    main.cpp
+    src/logger.cpp
 )
 
-target_sources(HelloWorld PRIVATE src/logger.cpp)
+# Automatically add all example sources under src/examples
+file(GLOB EXAMPLE_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/examples/*.cpp)
+if (EXAMPLE_SOURCES)
+    target_sources(HelloWorld PRIVATE ${EXAMPLE_SOURCES})
+endif()
 
 target_include_directories(HelloWorld PRIVATE ${OpenCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(HelloWorld PRIVATE fmt::fmt ${OpenCV_LIBS})
@@ -39,4 +44,14 @@ if (CLANG_FORMAT_EXE)
         COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${ALL_SOURCE_FILES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Running clang-format on sources")
+endif()
+
+# Keep compile_commands.json next to sources for editor tooling (clangd, VS Code)
+if (CMAKE_EXPORT_COMPILE_COMMANDS)
+    add_custom_target(copy_compile_commands ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${CMAKE_BINARY_DIR}/compile_commands.json
+                ${CMAKE_SOURCE_DIR}/compile_commands.json
+        BYPRODUCTS ${CMAKE_SOURCE_DIR}/compile_commands.json
+        COMMENT "Copy compile_commands.json to source dir")
 endif()

@@ -1,56 +1,100 @@
-#include "cv_util.h"
+#include "examples/registry.h"
 #include "logger.h"
 
-#include <algorithm>
-#include <cstdlib>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
 #include <string>
+#include <string_view>
+#include <vector>
+
+static int run_example(const examples::Item& ex, const std::vector<std::string>& args)
+{
+    // Build argv with argv[0] = example name
+    std::vector<std::string> storage;
+    storage.reserve(args.size() + 1);
+    storage.push_back(ex.name);
+    for (const auto& s : args)
+        storage.push_back(s);
+    std::vector<char*> argv;
+    argv.reserve(storage.size());
+    for (auto& s : storage)
+        argv.push_back(s.data());
+    return ex.fn(static_cast<int>(argv.size()), argv.data());
+}
 
 int main(int argc, char** argv)
 {
-    logger::Logger log{logger::Level::DEBUG, "[cv-demo] {}"};
+    logger::Logger log{logger::Level::INFO, "[runner] {}"};
 
-    log.info("start");
+    // Parse global args: --list, --example <name>, --args <...>  (or use -- to pass the rest)
+    bool list = false;
+    std::string example_name; // empty or "all" means run all
+    std::vector<std::string> example_args;
 
-    if (argc < 2)
+    for (int i = 1; i < argc; ++i)
     {
-        log.error("Usage: {} <image_path>", argv[0]);
-        return 2;
-    }
-
-    const std::string path = argv[1];
-    log.debug("loading image: {}", path);
-    cv::Mat img;
-    try
-    {
-        img = cv_util::load(path);
-    }
-    catch (const std::exception& e)
-    {
-        log.error("{}", e.what());
-        return 1;
-    }
-
-    log.info("loaded {}x{} ({} channels)", img.cols, img.rows, img.channels());
-
-    // Simple annotate to prove processing
-    cv::putText(img, "OpenCV loaded", {10, 30}, cv::FONT_ITALIC, 1.0, cv::Scalar(0, 255, 0), 2,
-                cv::LINE_AA);
-
-    if (!cv_util::quickDisplay(img, "Image", 0, true, 1024, 768))
-    {
-        const std::string out = "output.png";
-        if (!cv::imwrite(out, img))
+        std::string a = argv[i];
+        if (a == "--list")
         {
-            log.error("failed to write {}", out);
+            list = true;
+        }
+        else if (a == "--example" && i + 1 < argc)
+        {
+            example_name = argv[++i];
+        }
+        else if (a == "--args")
+        {
+            for (++i; i < argc; ++i)
+                example_args.emplace_back(argv[i]);
+            break;
+        }
+        else if (a == "--")
+        {
+            for (++i; i < argc; ++i)
+                example_args.emplace_back(argv[i]);
+            break;
+        }
+        else
+        {
+            log.warn("unknown option '{}' (use --list or --example <name> --args <...>)", a);
+        }
+    }
+
+    const auto& all = examples::all();
+    if (list)
+    {
+        log.info("available examples ({}):", all.size());
+        for (const auto& it : all)
+        {
+            log.info("- {}: {}", it.name, it.help);
+        }
+        return 0;
+    }
+
+    if (example_name.empty() || example_name == "all")
+    {
+        if (all.empty())
+        {
+            log.error("no examples registered");
             return 1;
         }
-        log.warn("no GUI detected; wrote {}", out);
+        int last_rc = 0;
+        for (const auto& it : all)
+        {
+            log.info("running example: {}", it.name);
+            last_rc = run_example(it, example_args);
+            if (last_rc != 0)
+            {
+                log.error("example '{}' failed with {}", it.name, last_rc);
+            }
+        }
+        return last_rc;
     }
 
-    log.info("done");
-    return 0;
+    if (const auto* it = examples::find(example_name))
+    {
+        log.info("running example: {}", it->name);
+        return run_example(*it, example_args);
+    }
+
+    log.error("unknown example: '{}' (use --list)", example_name);
+    return 2;
 }
