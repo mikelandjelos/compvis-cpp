@@ -63,7 +63,7 @@ Behavior:
 - `src/examples/edges.cpp` — example: Canny edge detection
 - `src/cli/argparse.h` — tiny header-only arg parser used by examples
 - `src/logger.h` / `src/logger.cpp` — colored logger with timestamps, levels, names
-- `src/cv_util.h` — header-only helpers: `cvutil::load`, `cvutil::quickDisplay`
+- `src/cv_util.h` — header-only helpers: `cv_util::load`, `cv_util::quickDisplay`
 - `assets/` — sample images
 
 ## Examples
@@ -129,3 +129,25 @@ This project is configured to use system packages. If you want vcpkg:
 - Reconfigure: `cmake --preset=default`
 
 Be aware OpenCV via vcpkg may pull many desktop deps on Linux (dbus, systemd, gtk). System packages are simpler for getting started.
+
+## Documentation (Doxygen + PlantUML)
+
+Install tools (Ubuntu/Debian):
+
+- `sudo apt-get install -y doxygen graphviz plantuml default-jre`
+
+Build docs:
+
+- `cmake --build .build --target docs`
+
+Output:
+
+- HTML in `.build/docs/html/index.html`
+
+Notes:
+
+- PlantUML jar is auto-detected at `/usr/share/plantuml/plantuml.jar`. If it
+  lives elsewhere, pass `-DPLANTUML_JAR=/path/to/plantuml.jar` when configuring
+  CMake.
+- Docs include the engine registry/runner, the tiny CLI, the logger, and all
+  examples. Example and engine pages live in `docs/`.

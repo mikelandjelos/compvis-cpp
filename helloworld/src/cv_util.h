@@ -1,4 +1,7 @@
-// Header-only CV utilities
+/**
+ * \file
+ * Header-only CV utilities used by examples.
+ */
 #pragma once
 
 #include <algorithm>

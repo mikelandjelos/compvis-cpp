@@ -55,3 +55,45 @@ if (CMAKE_EXPORT_COMPILE_COMMANDS)
         BYPRODUCTS ${CMAKE_SOURCE_DIR}/compile_commands.json
         COMMENT "Copy compile_commands.json to source dir")
 endif()
+
+# ----------------------------------------------------------------------------
+# Documentation: Doxygen (with optional PlantUML)
+# ----------------------------------------------------------------------------
+find_package(Doxygen QUIET)
+if (DOXYGEN_FOUND)
+    set(DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/docs")
+    set(DOXYGEN_INPUT
+        "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
+        "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        "${CMAKE_CURRENT_SOURCE_DIR}/docs"
+    )
+    string(REPLACE ";" " " DOXYGEN_INPUT_STR "${DOXYGEN_INPUT}")
+
+    # Allow user to pass -DPLANTUML_JAR=/path/to/plantuml.jar
+    set(PLANTUML_JAR "" CACHE FILEPATH "Path to plantuml.jar for Doxygen PlantUML integration")
+    if (NOT PLANTUML_JAR)
+        # Try common path on Debian/Ubuntu
+        find_file(PLANTUML_JAR_PATH_DEFAULT plantuml.jar PATHS /usr/share/plantuml NO_CACHE)
+        set(PLANTUML_JAR_PATH "${PLANTUML_JAR_PATH_DEFAULT}")
+    else()
+        set(PLANTUML_JAR_PATH "${PLANTUML_JAR}")
+    endif()
+
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in
+        ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+        @ONLY
+    )
+
+    add_custom_target(docs
+        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM)
+else()
+    message(STATUS "Doxygen not found: 'docs' target will be a stub")
+    add_custom_target(docs
+        COMMAND ${CMAKE_COMMAND} -E echo "Doxygen not found. Install 'doxygen' (and graphviz, plantuml) then reconfigure."
+        VERBATIM)
+endif()

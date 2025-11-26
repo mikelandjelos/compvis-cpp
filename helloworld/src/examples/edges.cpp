@@ -1,3 +1,8 @@
+/**
+ * \file
+ * \ingroup examples
+ * Canny edge detection with optional Gaussian blur.
+ */
 #include "cli/argparse.h"
 #include "cv_util.h"
 #include "examples/registry.h"

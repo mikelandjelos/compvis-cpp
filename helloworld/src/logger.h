@@ -1,3 +1,7 @@
+/**
+ * \file
+ * Colored, timestamped logger with severity levels and names.
+ */
 #pragma once
 
 #include <fmt/color.h>

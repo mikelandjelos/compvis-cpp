@@ -1,3 +1,8 @@
+/**
+ * \file
+ * \ingroup examples
+ * Show an image from disk.
+ */
 #include "cli/argparse.h"
 #include "cv_util.h"
 #include "examples/registry.h"

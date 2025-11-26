@@ -1,3 +1,8 @@
+/**
+ * \file
+ * \ingroup engine
+ * Tiny header-only CLI parser for examples.
+ */
 #pragma once
 
 #include <cctype>
