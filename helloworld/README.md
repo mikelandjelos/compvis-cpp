@@ -1,5 +1,9 @@
 # HelloWorld (OpenCV + fmt + CMake)
 
+[![CI](https://github.com/mikelandjelos/compvis-cpp/actions/workflows/ci.yml/badge.svg)](https://github.com/mikelandjelos/compvis-cpp/actions/workflows/ci.yml)
+[![Docs](https://github.com/mikelandjelos/compvis-cpp/actions/workflows/docs.yml/badge.svg)](https://github.com/mikelandjelos/compvis-cpp/actions/workflows/docs.yml)
+[Docs (GitHub Pages)](https://mikelandjelos.github.io/compvis-cpp/)
+
 Small starter CV playground with a simple runner (engine) for examples, a tiny
 argument parser, and a colored timestamped logger.
 
