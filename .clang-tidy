@@ -1,0 +1,24 @@
+Checks: >-
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  modernize-*,
+  performance-*,
+  readability-*
+
+WarningsAsErrors: >-
+  bugprone-*,
+  clang-analyzer-*
+
+HeaderFilterRegex: 'helloworld/.*'
+AnalyzeTemporaryDtors: false
+FormatStyle: none
+InheritParentConfig: false
+User: local
+
+# Silence particularly noisy checks
+CheckOptions:
+  - key: readability-magic-numbers.IgnoredIntegerValues
+    value: '0,1,2'
+  - key: readability-identifier-naming.Enabled
+    value: '0'
