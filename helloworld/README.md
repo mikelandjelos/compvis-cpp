@@ -151,3 +151,20 @@ Notes:
   CMake.
 - Docs include the engine registry/runner, the tiny CLI, the logger, and all
   examples. Example and engine pages live in `docs/`.
+
+## CI/CD (GitHub Actions)
+
+Workflows live under `.github/workflows/`:
+
+- `ci.yml` — builds on Linux, runs a smoke test, uploads `output_edges.png`.
+- `docs.yml` — builds Doxygen and deploys to GitHub Pages.
+- `release.yml` — on tag push `v*`, builds and attaches a Linux tarball to the release.
+
+Enable Pages:
+
+- Repo Settings → Pages → Build and deployment → Source: “GitHub Actions”.
+
+Cut a release:
+
+- `git tag v0.1.0 && git push origin v0.1.0`
+- The workflow builds `HelloWorld` and uploads `helloworld-<tag>-linux-x64.tar.gz`.

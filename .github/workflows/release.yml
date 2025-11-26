@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake pkg-config \
+            libopencv-dev libfmt-dev
+
+      - name: Configure
+        run: cmake -S helloworld -B helloworld/.build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build helloworld/.build -j
+
+      - name: Package
+        run: |
+          VERSION=${GITHUB_REF_NAME}
+          DEST=helloworld/dist
+          mkdir -p "$DEST/helloworld-$VERSION-linux-x64"
+          cp helloworld/.build/HelloWorld "$DEST/helloworld-$VERSION-linux-x64/"
+          cp -r helloworld/assets "$DEST/helloworld-$VERSION-linux-x64/"
+          cp helloworld/README.md "$DEST/helloworld-$VERSION-linux-x64/" || true
+          (cd "$DEST" && tar czf "helloworld-$VERSION-linux-x64.tar.gz" "helloworld-$VERSION-linux-x64")
+          echo "ASSET=$DEST/helloworld-$VERSION-linux-x64.tar.gz" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ASSET }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
