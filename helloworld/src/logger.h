@@ -21,6 +21,9 @@ enum class Level : int
 class Logger
 {
   public:
+    // Named logger (preferred)
+    explicit Logger(std::string name, Level level = Level::INFO, std::string format = "{}");
+    // Unnamed logger (kept for compatibility)
     explicit Logger(Level level = Level::INFO, std::string format = "{}");
     ~Logger();
 
@@ -29,6 +32,9 @@ class Logger
 
     void set_format(std::string f);
     const std::string& get_format() const noexcept;
+
+    void set_name(std::string n);
+    const std::string& get_name() const noexcept;
 
     template <typename... Args>
     void log(Level l, fmt::format_string<Args...> fmtstr, Args&&... args)
@@ -63,6 +69,7 @@ class Logger
 
   private:
     Level level_;
+    std::string name_;
     std::string format_;
 
     void emit(Level l, std::string_view text) const;

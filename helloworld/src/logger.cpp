@@ -46,7 +46,14 @@ static fmt::text_style style_for(Level l)
     return {};
 }
 
-Logger::Logger(Level level, std::string format) : level_(level), format_(std::move(format)) {}
+Logger::Logger(std::string name, Level level, std::string format)
+    : level_(level), name_(std::move(name)), format_(std::move(format))
+{
+}
+
+Logger::Logger(Level level, std::string format) : level_(level), name_(), format_(std::move(format))
+{
+}
 
 Logger::~Logger() = default;
 
@@ -68,6 +75,15 @@ const std::string& Logger::get_format() const noexcept
     return format_;
 }
 
+void Logger::set_name(std::string n)
+{
+    name_ = std::move(n);
+}
+const std::string& Logger::get_name() const noexcept
+{
+    return name_;
+}
+
 void Logger::emit(Level l, std::string_view text) const
 {
     FILE* out = (l == Level::WARN || l == Level::ERROR || l == Level::FATAL) ? stderr : stdout;
@@ -85,8 +101,16 @@ void Logger::emit(Level l, std::string_view text) const
     const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) %
                     std::chrono::seconds(1);
 
-    fmt::print(out, style, "[{}] [{:%H:%M:%S}.{:03d}] {}\n", to_string(l), tm,
-               static_cast<int>(ms.count()), text);
+    if (!name_.empty())
+    {
+        fmt::print(out, style, "[{}] [{}] [{:%H:%M:%S}.{:03d}] {}\n", to_string(l), name_, tm,
+                   static_cast<int>(ms.count()), text);
+    }
+    else
+    {
+        fmt::print(out, style, "[{}] [{:%H:%M:%S}.{:03d}] {}\n", to_string(l), tm,
+                   static_cast<int>(ms.count()), text);
+    }
 }
 
 } // namespace logger

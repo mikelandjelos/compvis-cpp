@@ -22,7 +22,7 @@ static int run_example(const examples::Item& ex, const std::vector<std::string>&
 
 int main(int argc, char** argv)
 {
-    logger::Logger log{logger::Level::INFO, "[runner] {}"};
+    logger::Logger log{"runner", logger::Level::INFO};
 
     // Parse global args: --list, --example <name>, --args <...>  (or use -- to pass the rest)
     bool list = false;

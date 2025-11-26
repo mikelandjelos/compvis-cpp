@@ -1,7 +1,9 @@
+#include "cli/argparse.h"
 #include "cv_util.h"
 #include "examples/registry.h"
 #include "logger.h"
 
+#include <algorithm>
 #include <opencv2/imgproc.hpp>
 #include <string>
 #include <vector>
@@ -10,39 +12,25 @@ using examples::ExampleFn;
 
 static int edges_example(int argc, char** argv)
 {
-    logger::Logger log{logger::Level::INFO, "[edges] {}"};
+    logger::Logger log{"edges", logger::Level::INFO};
 
-    // Defaults
-    std::string path;
-    int t1 = 100;
-    int t2 = 200;
-    int blur = 3; // odd > 0 to smooth noise
-
-    // Parse flags: --t1 N --t2 N --blur K, first non-flag is path
-    for (int i = 1; i < argc; ++i)
+    cli::ArgParser ap{"edges"};
+    ap.add_option("t1", 'l', "Canny lower threshold", "100");
+    ap.add_option("t2", 'u', "Canny upper threshold", "200");
+    ap.add_option("blur", 'b', "Gaussian blur kernel size (odd)", "3");
+    ap.add_positional("path", "Image path (default: assets/lena_img.png)");
+    if (!ap.parse(argc, argv) || ap.help())
     {
-        std::string a = argv[i];
-        if (a == "--t1" && i + 1 < argc)
-        {
-            t1 = std::max(0, std::stoi(argv[++i]));
-        }
-        else if (a == "--t2" && i + 1 < argc)
-        {
-            t2 = std::max(0, std::stoi(argv[++i]));
-        }
-        else if (a == "--blur" && i + 1 < argc)
-        {
-            blur = std::max(0, std::stoi(argv[++i]));
-            if (blur % 2 == 0 && blur > 0)
-                ++blur; // make odd
-        }
-        else if (!a.empty() && a[0] != '-')
-        {
-            path = a;
-        }
+        log.info("\n{}", ap.usage());
+        return ap.help() ? 0 : 2;
     }
-    if (path.empty())
-        path = "assets/lena_img.png";
+    std::string path =
+        ap.positionals().empty() ? std::string{"assets/lena_img.png"} : ap.positionals().front();
+    int t1 = std::max(0, ap.get_int("t1", 100));
+    int t2 = std::max(0, ap.get_int("t2", 200));
+    int blur = std::max(0, ap.get_int("blur", 3));
+    if (blur % 2 == 0 && blur > 0)
+        ++blur;
 
     log.info("loading {} (t1={}, t2={}, blur={})", path, t1, t2, blur);
 

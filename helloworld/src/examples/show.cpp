@@ -1,3 +1,4 @@
+#include "cli/argparse.h"
 #include "cv_util.h"
 #include "examples/registry.h"
 #include "logger.h"
@@ -10,21 +11,17 @@ using examples::ExampleFn;
 
 static int show_example(int argc, char** argv)
 {
-    logger::Logger log{logger::Level::INFO, "[show] {}"};
-    std::string path;
+    logger::Logger log{"show", logger::Level::INFO};
 
-    // Parse very simple args: first non-flag is path
-    for (int i = 1; i < argc; ++i)
+    cli::ArgParser ap{"show"};
+    ap.add_positional("path", "Image path (default: assets/lena_img.png)");
+    if (!ap.parse(argc, argv) || ap.help())
     {
-        std::string a = argv[i];
-        if (!a.empty() && a[0] != '-')
-        {
-            path = a;
-            break;
-        }
+        log.info("\n{}", ap.usage());
+        return ap.help() ? 0 : 2;
     }
-    if (path.empty())
-        path = "assets/lena_img.png"; // default
+    std::string path =
+        ap.positionals().empty() ? std::string{"assets/lena_img.png"} : ap.positionals().front();
 
     log.info("loading {}", path);
     cv::Mat img;

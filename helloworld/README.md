@@ -1,6 +1,7 @@
 # HelloWorld (OpenCV + fmt + CMake)
 
-Small starter app to experiment with OpenCV.
+Small starter CV playground with a simple runner (engine) for examples, a tiny
+argument parser, and a colored timestamped logger.
 
 ## Prerequisites
 
@@ -27,7 +28,7 @@ From this folder (`helloworld`):
 Notes:
 
 - Preset uses the "Unix Makefiles" generator and system packages (no vcpkg toolchain).
-- `compile_commands.json` is generated in `.build/` for tooling.
+- `compile_commands.json` is generated in `.build/` and copied next to sources for editors.
 
 ## Run
 
@@ -45,6 +46,10 @@ Run one example and pass arguments (everything after `--args` is forwarded to th
 - `./.build/HelloWorld --example show --args assets/lena_img.png`
 - `./.build/HelloWorld --example edges --args assets/lena_img.png --t1 50 --t2 150 --blur 3`
 
+Show example-specific help:
+
+- `./.build/HelloWorld --example edges --args --help`
+
 Behavior:
 
 - Examples that open windows use a resizable window if a GUI is available (`DISPLAY`/`WAYLAND_DISPLAY`).
@@ -53,17 +58,29 @@ Behavior:
 ## Code Layout
 
 - `main.cpp` — bootstrap runner with `--list`, `--example`, `--args`
-- `src/examples/registry.h` / `src/examples/registry.cpp` — example registry
-- `src/examples/show.cpp` — sample example: display an image
-- `src/logger.h` / `src/logger.cpp` — colored logger with timestamps, levels
-- `src/cv_util.h` — header-only helpers: `cv_util::load`, `cv_util::quickDisplay`
+- `src/examples/registry.h` / `src/examples/registry.cpp` — example registry and macro
+- `src/examples/show.cpp` — example: display an image
+- `src/examples/edges.cpp` — example: Canny edge detection
+- `src/cli/argparse.h` — tiny header-only arg parser used by examples
+- `src/logger.h` / `src/logger.cpp` — colored logger with timestamps, levels, names
+- `src/cv_util.h` — header-only helpers: `cvutil::load`, `cvutil::quickDisplay`
 - `assets/` — sample images
+
+## Examples
+
+- `show [path]`
+  - Displays an image (defaults to `assets/lena_img.png`).
+  - Help: `./.build/HelloWorld --example show --args --help`
+- `edges [--t1 N] [--t2 N] [--blur K] [path]`
+  - Canny edges with optional Gaussian blur; overlays edges in red.
+  - Defaults: `--t1 100 --t2 200 --blur 3`, `path=assets/lena_img.png`.
+  - Help: `./.build/HelloWorld --example edges --args --help`
 
 ## Logger
 
-- Construct: `logger::Logger log{logger::Level::DEBUG, "[cv-demo] {}"};`
+- Construct (named): `logger::Logger log{"cv-demo", logger::Level::DEBUG};`
 - Usage: `log.info("loaded {}x{}", img.cols, img.rows);`
-- Output format: `[LEVEL HH:MM:SS.mmm] <pattern-applied-text>`
+- Output format: `[LEVEL name] [HH:MM:SS.mmm] <pattern-applied-text>`
 
 ## Formatting and Linting
 
@@ -72,11 +89,30 @@ Behavior:
 - Clang-Tidy (if installed) runs automatically during the build.
   - Manual: `run-clang-tidy -p .build` (requires `run-clang-tidy` helper)
 
-## Adding Code
+## Adding Code / New Examples
 
 - Header-only (in `src/`): just `#include "your.hpp"` — already on the include path.
-- New `.cpp` files: add to the target in `CMakeLists.txt`, e.g.:
-  - `target_sources(HelloWorld PRIVATE src/your.cpp)`
+- New `.cpp` files: add to target via `target_sources` in `CMakeLists.txt` if outside `src/examples`.
+- New example:
+  1) Create `src/examples/<name>.cpp` with function `static int <name>_example(int argc, char** argv)`.
+  2) Register it at the end: `REGISTER_EXAMPLE("<name>", <name>_example, "short help")`.
+  3) Parse args with the tiny parser:
+
+```cpp
+#include "cli/argparse.h"
+static int my_example(int argc, char** argv) {
+  logger::Logger log{"my", logger::Level::INFO};
+  cli::ArgParser ap{"my"};
+  ap.add_option("k", 'k', "some int option", "42");
+  ap.add_positional("path", "image path");
+  if (!ap.parse(argc, argv) || ap.help()) { log.info("\n{}", ap.usage()); return ap.help() ? 0 : 2; }
+  int k = ap.get_int("k", 42);
+  std::string path = ap.positionals().empty() ? "assets/lena_img.png" : ap.positionals().front();
+  // ... do work ...
+  return 0;
+}
+REGISTER_EXAMPLE("my", my_example, "demo example");
+```
 
 ## Optional: Ninja generator
 
