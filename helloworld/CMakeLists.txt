@@ -10,7 +10,7 @@ find_package(fmt CONFIG REQUIRED)
 find_package(OpenCV REQUIRED)
 
 add_executable(
-    HelloWorld helloworld.cpp
+    HelloWorld main.cpp
 )
 
 target_sources(HelloWorld PRIVATE src/logger.cpp)
